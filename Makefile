@@ -3,21 +3,18 @@ VERSION := master
 
 all: zmq
 
-# requires cmake, uuid-dev, and libzmq-dev.
+# requires uuid-dev, and libzmq-dev.
 # TODO: How to ensure they are installed in cross-platform way, if any?
-zmq: build/lua-zmq/build/zmq.so
+zmq: build/zmq.so
 
-build/lua-zmq/build/zmq.so: build/lua-zmq/build
-	#apt-get install uuid-dev libzmq-dev cmake
-	( cd $^ ; LUA_DIR=$(LUA_DIR) cmake .. )
-	make -C $^
+build/zmq.so: build/zmq.c
+	#sudo apt-get install uuid-dev libzmq-dev
+	gcc -fPIC -lzmq -shared -o $@ -I$(LUA_DIR) $^
 
-build/lua-zmq/build:
+build/zmq.c:
 	mkdir -p build
-	wget https://github.com/Neopallium/lua-zmq/tarball/$(VERSION) -O - | tar -xzpf - -C build
-	mv build/Neopallium-lua-* build/lua-zmq
+	wget https://github.com/Neopallium/lua-zmq/raw/$(VERSION)/src/pre_generated-zmq.nobj.c -O $@
 	# FIXME: lua-zmq will look for liblua, let's link libluajit
 	ln -sf libluajit.so $(LUA_DIR)/liblua.so
-	mkdir -p $@
 
 .PHONY: all zmq
