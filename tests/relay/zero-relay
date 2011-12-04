@@ -1,6 +1,6 @@
 #!/usr/bin/env luvit
 
-local Zmq = require('../')
+local Zmq = require('../../')
 
 -- create context
 local ctx = Zmq.init(1)
