@@ -1,7 +1,7 @@
 VERSION         := master
 LIBZMQ_VERSION  := 2.1.10
 
-WGET            := wget --no-check-certificate
+WGET            := wget -qct3 --no-check-certificate
 
 OS ?= $(shell uname)
 ifeq ($(OS),Darwin)
@@ -18,12 +18,13 @@ CFLAGS  += -I$(LUA_DIR) -Ibuild/zeromq-$(LIBZMQ_VERSION)/include/
 #LDFLAGS += $(shell pkg-config --libs lua)
 LDFLAGS += -lstdc++
 
-all: zmq
+all: module
 
-zmq: build/zmq.$(SOEXT)
+module: build/zmq.luvit
 
-build/zmq.$(SOEXT): build/zmq.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
+build/zmq.luvit: build/zmq.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^ $(LDFLAGS)
+	mv build/zmq.$(SOEXT) $@
 
 build/zmq.c:
 	mkdir -p build
@@ -41,4 +42,5 @@ build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a:
 clean:
 	rm -rf build
 
-.PHONY: all zmq
+.PHONY: all module clean
+.SILENT:
