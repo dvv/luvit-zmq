@@ -13,7 +13,7 @@ LDFLAGS += -luuid -lrt -lpthread
 SOEXT := so
 endif
 
-CFLAGS  += $(shell luvit-config --cflags | sed 's/ -Werror / /') -Ibuild/zeromq-$(LIBZMQ_VERSION)/include/
+CFLAGS  += $(shell luvit --cflags | sed 's/ -Werror / /') -Ibuild/zeromq-$(LIBZMQ_VERSION)/include/
 LDFLAGS += -lstdc++
 
 all: module
@@ -21,7 +21,7 @@ all: module
 module: build/zmq.luvit
 
 build/zmq.luvit: build/zmq.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
-	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
 build/zmq.c:
 	mkdir -p build
@@ -30,9 +30,9 @@ build/zmq.c:
 build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a:
 	# requires uuid-dev
 	# TODO: How to ensure they are installed in cross-platform way, if any?
-	#sudo apt-get install uuid-dev
+	#sudo apt-get install g++ uuid-dev
 	mkdir -p build
-	$(WGET) http://download.zeromq.org/zeromq-$(LIBZMQ_VERSION)-beta.tar.gz -O - | tar -xzpf - -C build
+	$(WGET) http://download.zeromq.org/zeromq-$(LIBZMQ_VERSION)-meta.tar.gz -O - | tar -xzpf - -C build
 	#$(WGET) https://github.com/zeromq/libzmq/tarball/master -O - | tar -xzpf - -C build
 	( cd build/zeromq-$(LIBZMQ_VERSION) ; ./configure --prefix=/usr/local )
 	$(MAKE) -C build/zeromq-$(LIBZMQ_VERSION)
