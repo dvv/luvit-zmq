@@ -25,7 +25,8 @@ build/zmq.luvit: build/zmq.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
 
 build/zmq.c:
 	mkdir -p build
-	$(WGET) https://github.com/Neopallium/lua-zmq/raw/$(VERSION)/src/pre_generated-zmq.nobj.c -O $@
+	$(WGET) https://github.com/Neopallium/lua-zmq/raw/$(VERSION)/src/pre_generated-zmq.nobj.c -O - \
+		| sed '/^"C = ffi_load(os_lib_table/d' >$@
 
 build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a:
 	# requires uuid-dev
