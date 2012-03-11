@@ -4,18 +4,18 @@ LIBZMQ_VERSION  := 3.1.0
 PATH := .:$(PATH)
 WGET := wget -qct3 --no-check-certificate
 
-CFLAGS  += $(shell luvit --cflags | sed 's/ -Werror / /;s,/luajit,,g') -Ibuild/zeromq-$(LIBZMQ_VERSION)/include/
+CFLAGS  += -Isrc/ -Ibuild/zeromq-$(LIBZMQ_VERSION)/include/
 LDFLAGS += -lstdc++
 
 all: module
 
 module: build/zmq.luvit
 
-build/zmq.luvit: build/zmq.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
+build/zmq.luvit: src/zmq.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
+	mkdir -p build
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
-build/zmq.c:
-	mkdir -p build
+src/zmq.c:
 	$(WGET) https://github.com/Neopallium/lua-zmq/raw/$(VERSION)/src/pre_generated-zmq.nobj.c -O - \
 		| sed '/^"C = ffi_load(os_lib_table/d' >$@
 
