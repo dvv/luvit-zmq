@@ -15,8 +15,6 @@ sub:setopt(ZMQ.SUBSCRIBE, '')
 local pub = ctx:socket(ZMQ.PUB)
 pub:connect('tcp://127.0.0.1:65454')
 
-require('timer').setTimeout(400, function ()
-
 --p(pub:send(('o'):rep(8192)))
 pub:send(('o'):rep(1024))
 
@@ -32,5 +30,3 @@ while true do
     print(n, #msg, n / (time() - t0), 'msg/sec')
   end
 end
-
-end)

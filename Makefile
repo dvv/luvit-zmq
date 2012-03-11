@@ -21,6 +21,10 @@ build/zmq.luvit: src/zmq.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
 	mkdir -p build
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
 
+#build/zmq.luvit: src/pubsub.c build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a
+#	mkdir -p build
+#	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS)
+
 src/zmq.c:
 	$(WGET) https://github.com/Neopallium/lua-zmq/raw/$(VERSION)/src/pre_generated-zmq.nobj.c -O - \
 		| sed '/^"C = ffi_load(os_lib_table/d' >$@
