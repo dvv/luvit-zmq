@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <zmq.h>
 
@@ -18,21 +19,28 @@ int main(int argc, char *argv[])
 
   // loop
   while (1) {
-    zmq_msg_t msg;
-    zmq_msg_init(&msg);
-    // break if interrupted
-    if (zmq_recv(sub, &msg, 0) != 0) break;
-    // http://api.zeromq.org/3-0:zmq-recvmsg
-    /***
-    // check if multipart
+    int rc;
     int64_t more;
-    size_t more_size = sizeof (more);
-    zmq_getsockopt(sub, ZMQ_RCVMORE, &more, &more_size);
-    if (!more) break; // last message part
-    ***/
-    zmq_send(pub, &msg, 0);
-    zmq_msg_close(&msg);
+    size_t more_size = sizeof more;
+    do {
+      zmq_msg_t msg;
+      zmq_msg_init(&msg);
+      // break if interrupted
+      rc = zmq_recvmsg(sub, &msg, 0);
+      if (rc == -1) {
+        zmq_msg_close(&msg);
+        fprintf(stderr, "ERR: %d\n", rc);
+        goto done;
+      }
+      // relay
+      zmq_sendmsg(pub, &msg, 0);
+      // more parts are to follow?
+      rc = zmq_getsockopt(sub, ZMQ_RCVMORE, &more, &more_size);
+      zmq_msg_close(&msg);
+    } while (more);
   }
+
+done:
 
   // cleanup
   zmq_close(pub);

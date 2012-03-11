@@ -1,10 +1,9 @@
 #!/usr/bin/env luvit
 
-local ZMQ = require('../../')
+local ZMQ = require('zmq')
 
 -- context
 local ctx = ZMQ.init(1)
-p(ctx)
 
 -- listening to relayed
 local sub = ctx:socket(ZMQ.SUB)
@@ -15,6 +14,7 @@ sub:setopt(ZMQ.SUBSCRIBE, '')
 local pub = ctx:socket(ZMQ.PUB)
 pub:connect('tcp://127.0.0.1:65454')
 
+ZMQ.sleep(1)
 --p(pub:send(('o'):rep(8192)))
 pub:send(('o'):rep(1024))
 

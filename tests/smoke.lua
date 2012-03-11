@@ -2,6 +2,6 @@
 
 local Zmq = require('../')
 assert(not _G.zmq)
-assert(Zmq.init)
+assert(Zmq.init and Zmq.init(1))
 assert(Zmq.version())
-p('Version:', Zmq.version())
+p(Zmq.version())
