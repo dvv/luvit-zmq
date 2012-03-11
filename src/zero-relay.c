@@ -1,6 +1,7 @@
-#include "zhelpers.h"
+#include <stdio.h>
+#include <zmq.h>
 
-int main (int argc, char *argv [])
+int main(int argc, char *argv[])
 {
   void *context = zmq_init(1);
 
@@ -21,6 +22,7 @@ int main (int argc, char *argv [])
     zmq_msg_init(&msg);
     // break if interrupted
     if (zmq_recv(sub, &msg, 0) != 0) break;
+    // http://api.zeromq.org/3-0:zmq-recvmsg
     /***
     // check if multipart
     int64_t more;
@@ -36,5 +38,6 @@ int main (int argc, char *argv [])
   zmq_close(pub);
   zmq_close(sub);
   zmq_term(context);
+
   return 0;
 }
