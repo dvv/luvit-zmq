@@ -1,19 +1,10 @@
 VERSION         := master
 LIBZMQ_VERSION  := 3.1.0
 
-WGET            := wget -qct3 --no-check-certificate
+PATH := .:$(PATH)
+WGET := wget -qct3 --no-check-certificate
 
-OS ?= $(shell uname)
-ifeq ($(OS),Darwin)
-SOEXT := dylib
-else ifeq ($(OS),Windows)
-SOEXT := dll
-else
-LDFLAGS += -luuid -lrt -lpthread
-SOEXT := so
-endif
-
-CFLAGS  += $(shell luvit --cflags | sed 's/ -Werror / /') -Ibuild/zeromq-$(LIBZMQ_VERSION)/include/
+CFLAGS  += $(shell luvit --cflags | sed 's/ -Werror / /;s,/luajit,,g') -Ibuild/zeromq-$(LIBZMQ_VERSION)/include/
 LDFLAGS += -lstdc++
 
 all: module
@@ -33,7 +24,7 @@ build/zeromq-$(LIBZMQ_VERSION)/src/.libs/libzmq.a:
 	# TODO: How to ensure they are installed in cross-platform way, if any?
 	#sudo apt-get install g++ uuid-dev
 	mkdir -p build
-	$(WGET) http://download.zeromq.org/zeromq-$(LIBZMQ_VERSION)-meta.tar.gz -O - | tar -xzpf - -C build
+	$(WGET) http://download.zeromq.org/zeromq-$(LIBZMQ_VERSION)-beta.tar.gz -O - | tar -xzpf - -C build
 	#$(WGET) https://github.com/zeromq/libzmq/tarball/master -O - | tar -xzpf - -C build
 	( cd build/zeromq-$(LIBZMQ_VERSION) ; ./configure --prefix=/usr/local )
 	$(MAKE) -C build/zeromq-$(LIBZMQ_VERSION)
@@ -42,7 +33,9 @@ clean:
 	rm -rf build
 
 test:
-	luvit test.lua
+	-luvit -e '' || wget -qct3 http://luvit.io/dist/latest/ubuntu-latest/$(shell uname -m)/luvit-bundled/luvit
+	-chmod a+x luvit 2>/dev/null
+	luvit tests/smoke.lua
 
-.PHONY: all module clean
+.PHONY: all module clean test
 .SILENT:
