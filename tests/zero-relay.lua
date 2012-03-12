@@ -1,0 +1,99 @@
+#!/usr/bin/env luvit
+
+local Table = require('table')
+local ZMQ = require('zmq')
+
+--
+-- relay server
+--
+
+do
+  -- create context
+  local ctx = ZMQ.init(1)
+
+  -- listen to messages
+  debug('Push to *:65454')
+  local sub = ctx:socket(ZMQ.SUB)
+  sub:bind('tcp://*:65454')
+  sub:setopt(ZMQ.SUBSCRIBE, '')
+
+  -- publish to subscribers
+  debug('Subscribe to *:65455')
+  local pub = ctx:socket(ZMQ.PUB)
+  pub:bind('tcp://*:65455')
+
+  -- relay loop
+  local n = 0
+  local msg = ZMQ.zmq_msg_t()
+  while sub:recv_msg(msg)
+    and pub:send_msg(msg, sub:getopt(ZMQ.RCVMORE) == 1 and ZMQ.SNDMORE)
+  do
+    --[[
+    n = n + 1
+    if n % 10000 == 0 then print('RELAYED', n) end
+    ]]--
+  end
+
+  -- cleanup
+  msg:close()
+  pub:close()
+  sub:close()
+  ctx:term()
+end
+
+--
+-- relay client
+--
+
+do
+  -- context
+  local ctx = ZMQ.init(1)
+
+  -- listening to relayed
+  local sub = ctx:socket(ZMQ.SUB)
+  sub:connect('tcp://127.0.0.1:65455')
+  sub:setopt(ZMQ.SUBSCRIBE, '')
+  debug('Connected to *:65455')
+
+  -- publishing to relay
+  local pub = ctx:socket(ZMQ.PUB)
+  pub:connect('tcp://127.0.0.1:65454')
+  debug('Connected to *:65454')
+
+  ZMQ.sleep(1)
+
+  local before = '<<<'
+  local ping = ('o'):rep(8)--1024)
+  local after = '>>>'
+  local str = before .. ping .. after
+  pub:send(before, ZMQ.SNDMORE)
+  pub:send(ping, ZMQ.SNDMORE)
+  pub:send(after)
+  debug('Sent ping')
+
+  -- loop
+  local n = 0
+  local time = require('os').time
+  local t0 = time()
+
+  local function relay(msg)
+    pub:send(msg)
+    n = n + 1
+    if n % 10000 == 0 then
+      print(n, #msg, n / (time() - t0), 'msg/sec')
+    end
+    if n == 100000 then
+      process.exit()
+    end
+  end
+
+  while true do
+    local msg = { sub:recv() }
+    while sub:getopt(ZMQ.RCVMORE) == 1 do
+      msg[#msg + 1] = sub:recv()
+    end
+    msg = Table.concat(msg)
+    assert(msg == str)
+    relay(msg)
+  end
+end
