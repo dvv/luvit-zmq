@@ -4,51 +4,37 @@
 
 #include "uv.h"
 
-#include "zmq.h"
-
 #include "lua.h"
 #include "lauxlib.h"
 
-typedef int (*LUA_FN)(lua_State*);
+////////////////////////////////////////////////////////////////////////////////
+
+#include "zmq.h"
+
+static int lworker(lua_State* L) {
+  zmq_sleep(5);
+  lua_pushstring(L, "ура!");
+  lua_pushinteger(L, 5);
+  return 2;
+}
+
+static int lworker2(lua_State* L) {
+  zmq_sleep(2);
+  lua_pushinteger(L, 2);
+  lua_pushstring(L, "ура!");
+  lua_pushboolean(L, 0);
+  return 3;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
   lua_State* L;
   lua_State* X;
   uv_work_t work_req;
-  LUA_FN fn;
+  lua_CFunction fn;
   int cb;
 } luv_work_t;
-
-/*
- * N.B. this functions should be exportable, to save work
- */
-static int lworker(lua_State* L) {
-  printf("WORKING5\n");
-
-  zmq_sleep(5);
-  lua_pushstring(L, "ура!");
-  lua_pushinteger(L, 5);
-
-  printf("WORKED5\n");
-  return 2;
-}
-
-static int lworker2(lua_State* L) {
-  printf("WORKING2\n");
-
-  zmq_sleep(2);
-  lua_pushinteger(L, 2);
-  lua_pushstring(L, "ура!");
-  lua_pushboolean(L, 0);
-
-  printf("WORKED2\n");
-  return 3;
-}
-
-static const LUA_FN functions[] = {
-  lworker,
-  lworker2,
-};
 
 static void worker(uv_work_t* req) {
   luv_work_t* ref = req->data;
@@ -81,12 +67,20 @@ int luv_queue(lua_State* L) {
 
   int before = lua_gettop(L);
 
-  int fn_index = luaL_checkinteger(L, 1);
+  /* check arguments */
+  luaL_checktype(L, 1, LUA_TFUNCTION);
   luaL_checktype(L, 2, LUA_TFUNCTION);
 
+  /* allocate worker object */
   luv_work_t* ref = malloc(sizeof(luv_work_t));
   ref->work_req.data = ref;
   ref->L = L;
+
+  /* store worker function */
+  ref->fn = lua_tocfunction(L, 1);
+  if (ref->fn == NULL) {
+    return luaL_error(L, "queue: can not find worker function");
+  }
 
   /* allocate new state */
   ref->X = luaL_newstate();
@@ -94,8 +88,6 @@ int luv_queue(lua_State* L) {
     return luaL_error(L, "queue: can not allocate new state");
   }
 
-  /* store function index */
-  ref->fn = functions[fn_index];
   /* store callback */
   lua_pushvalue(L, 2);
   ref->cb = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -116,6 +108,7 @@ int luv_queue(lua_State* L) {
 
 static const luaL_reg exports[] = {
   { "queue", luv_queue },
+  { "worker", lworker },
   { "worker2", lworker2 },
   { NULL, NULL }
 };
