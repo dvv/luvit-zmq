@@ -1,6 +1,7 @@
 local Zmq = require './build/zmq'
 _G.zmq = nil
 
+local band = require('bit').band
 local Utils = require('utils')
 local Poller = require('core').Emitter:extend()
 
@@ -12,6 +13,10 @@ end
 function Poller:remove(sock)
   local id = self.poller:remove(sock)
   self.callbacks[id] = nil
+end
+
+function Poller:insert(sock)
+  local id = self.poller:add(sock, Zmq.POLLIN + Zmq.POLLOUT + Zmq.POLLERR)
 end
 
 function Poller:modify(sock, events, cb)
@@ -31,7 +36,22 @@ function Poller:poll(timeout)
   local callbacks = self.callbacks
   for i = 1, count do
     local id, revents = poller:next_revents_idx()
+    -- call backs
     callbacks[id](revents)
+    -- fire events
+    -- TODO: validate!
+    --[[
+    local sock = self.poller.items[id]
+    p(sock)
+    if band(revents, Zmq.POLLIN) then
+      self:emit('data', sock, sock:recv(Zmq.DONTWAIT))
+    end
+    if band(revents, Zmq.POLLOUT) then
+      self:emit('drain', sock)
+    end
+    if band(revents, Zmq.POLLERR) then
+      self:emit('error', sock)
+    end]]--
   end
   return count
 end
