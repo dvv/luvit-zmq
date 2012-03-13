@@ -37,6 +37,7 @@ test:
 	-chmod a+x luvit 2>/dev/null
 	luvit tests/smoke.lua
 	luvit tests/send-recv.lua
+	luvit tests/poll-new.lua
 
 .PHONY: all module relay clean test
 .SILENT:

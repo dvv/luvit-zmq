@@ -237,9 +237,14 @@ typedef struct ffi_export_symbol {
 #  endif
 #endif
 
+/* make sure ZMQ_DONTWAIT & ZMQ_NOBLOCK are both defined. */
 #ifndef ZMQ_DONTWAIT
 #  define ZMQ_DONTWAIT     ZMQ_NOBLOCK
 #endif
+#ifndef ZMQ_NOBLOCK
+#  define ZMQ_NOBLOCK      ZMQ_DONTWAIT
+#endif
+
 #if VERSION_2_0
 #  define ZMQ_POLL_MSEC    1000 // zmq_poll is usec
 #elif VERSION_3_0
@@ -6472,6 +6477,9 @@ static const obj_const zmq_constants[] = {
 #ifdef ZMQ_MAX_VSM_SIZE
   {"MAX_VSM_SIZE", NULL, ZMQ_MAX_VSM_SIZE, CONST_NUMBER},
 #endif
+#ifdef ZMQ_RATE
+  {"RATE", NULL, ZMQ_RATE, CONST_NUMBER},
+#endif
 #ifdef ZMQ_DEALER
   {"DEALER", NULL, ZMQ_DEALER, CONST_NUMBER},
 #endif
@@ -6493,14 +6501,11 @@ static const obj_const zmq_constants[] = {
 #ifdef ZMQ_IDENTITY
   {"IDENTITY", NULL, ZMQ_IDENTITY, CONST_NUMBER},
 #endif
-#ifdef ZMQ_SWAP
-  {"SWAP", NULL, ZMQ_SWAP, CONST_NUMBER},
-#endif
-#ifdef ZMQ_RATE
-  {"RATE", NULL, ZMQ_RATE, CONST_NUMBER},
-#endif
 #ifdef ZMQ_STREAMER
   {"STREAMER", NULL, ZMQ_STREAMER, CONST_NUMBER},
+#endif
+#ifdef ZMQ_DEALER
+  {"XREQ", NULL, ZMQ_DEALER, CONST_NUMBER},
 #endif
 #ifdef ZMQ_MSG_MORE
   {"MSG_MORE", NULL, ZMQ_MSG_MORE, CONST_NUMBER},
@@ -6508,20 +6513,23 @@ static const obj_const zmq_constants[] = {
 #ifdef ZMQ_MAXMSGSIZE
   {"MAXMSGSIZE", NULL, ZMQ_MAXMSGSIZE, CONST_NUMBER},
 #endif
-#ifdef ZMQ_SUB
-  {"SUB", NULL, ZMQ_SUB, CONST_NUMBER},
-#endif
 #ifdef ZMQ_PULL
   {"PULL", NULL, ZMQ_PULL, CONST_NUMBER},
+#endif
+#ifdef ZMQ_SUB
+  {"SUB", NULL, ZMQ_SUB, CONST_NUMBER},
 #endif
 #ifdef ZMQ_PAIR
   {"PAIR", NULL, ZMQ_PAIR, CONST_NUMBER},
 #endif
-#ifdef ZMQ_DEALER
-  {"XREQ", NULL, ZMQ_DEALER, CONST_NUMBER},
+#ifdef ZMQ_MULTICAST_HOPS
+  {"MULTICAST_HOPS", NULL, ZMQ_MULTICAST_HOPS, CONST_NUMBER},
 #endif
-#ifdef ZMQ_VSM
-  {"VSM", NULL, ZMQ_VSM, CONST_NUMBER},
+#ifdef ZMQ_FD
+  {"FD", NULL, ZMQ_FD, CONST_NUMBER},
+#endif
+#ifdef ZMQ_SWAP
+  {"SWAP", NULL, ZMQ_SWAP, CONST_NUMBER},
 #endif
 #ifdef ZMQ_PUB
   {"PUB", NULL, ZMQ_PUB, CONST_NUMBER},
@@ -6535,20 +6543,20 @@ static const obj_const zmq_constants[] = {
 #ifdef ZMQ_SNDMORE
   {"SNDMORE", NULL, ZMQ_SNDMORE, CONST_NUMBER},
 #endif
-#ifdef ZMQ_FD
-  {"FD", NULL, ZMQ_FD, CONST_NUMBER},
-#endif
-#ifdef ZMQ_MULTICAST_HOPS
-  {"MULTICAST_HOPS", NULL, ZMQ_MULTICAST_HOPS, CONST_NUMBER},
+#ifdef ZMQ_UNSUBSCRIBE
+  {"UNSUBSCRIBE", NULL, ZMQ_UNSUBSCRIBE, CONST_NUMBER},
 #endif
 #ifdef ZMQ_PUSH
   {"PUSH", NULL, ZMQ_PUSH, CONST_NUMBER},
 #endif
-#ifdef ZMQ_UNSUBSCRIBE
-  {"UNSUBSCRIBE", NULL, ZMQ_UNSUBSCRIBE, CONST_NUMBER},
-#endif
 #ifdef ZMQ_RCVLABEL
   {"RCVLABEL", NULL, ZMQ_RCVLABEL, CONST_NUMBER},
+#endif
+#ifdef ZMQ_POLLIN
+  {"POLLIN", NULL, ZMQ_POLLIN, CONST_NUMBER},
+#endif
+#ifdef ZMQ_AFFINITY
+  {"AFFINITY", NULL, ZMQ_AFFINITY, CONST_NUMBER},
 #endif
 #ifdef ZMQ_POLLERR
   {"POLLERR", NULL, ZMQ_POLLERR, CONST_NUMBER},
@@ -6562,17 +6570,17 @@ static const obj_const zmq_constants[] = {
 #ifdef ZMQ_HWM
   {"HWM", NULL, ZMQ_HWM, CONST_NUMBER},
 #endif
-#ifdef ZMQ_AFFINITY
-  {"AFFINITY", NULL, ZMQ_AFFINITY, CONST_NUMBER},
+#ifdef ZMQ_RECONNECT_IVL_MSEC
+  {"RECONNECT_IVL_MSEC", NULL, ZMQ_RECONNECT_IVL_MSEC, CONST_NUMBER},
 #endif
 #ifdef ZMQ_REQ
   {"REQ", NULL, ZMQ_REQ, CONST_NUMBER},
 #endif
-#ifdef ZMQ_RECONNECT_IVL_MSEC
-  {"RECONNECT_IVL_MSEC", NULL, ZMQ_RECONNECT_IVL_MSEC, CONST_NUMBER},
-#endif
 #ifdef ZMQ_BACKLOG
   {"BACKLOG", NULL, ZMQ_BACKLOG, CONST_NUMBER},
+#endif
+#ifdef ZMQ_RECONNECT_IVL_MAX
+  {"RECONNECT_IVL_MAX", NULL, ZMQ_RECONNECT_IVL_MAX, CONST_NUMBER},
 #endif
 #ifdef ZMQ_SNDLABEL
   {"SNDLABEL", NULL, ZMQ_SNDLABEL, CONST_NUMBER},
@@ -6580,11 +6588,11 @@ static const obj_const zmq_constants[] = {
 #ifdef ZMQ_QUEUE
   {"QUEUE", NULL, ZMQ_QUEUE, CONST_NUMBER},
 #endif
-#ifdef ZMQ_RECONNECT_IVL_MAX
-  {"RECONNECT_IVL_MAX", NULL, ZMQ_RECONNECT_IVL_MAX, CONST_NUMBER},
+#ifdef ZMQ_RCVHWM
+  {"RCVHWM", NULL, ZMQ_RCVHWM, CONST_NUMBER},
 #endif
-#ifdef ZMQ_POLLIN
-  {"POLLIN", NULL, ZMQ_POLLIN, CONST_NUMBER},
+#ifdef ZMQ_VSM
+  {"VSM", NULL, ZMQ_VSM, CONST_NUMBER},
 #endif
 #ifdef ZMQ_ROUTER
   {"XREP", NULL, ZMQ_ROUTER, CONST_NUMBER},
@@ -6595,8 +6603,8 @@ static const obj_const zmq_constants[] = {
 #ifdef ZMQ_MCAST_LOOP
   {"MCAST_LOOP", NULL, ZMQ_MCAST_LOOP, CONST_NUMBER},
 #endif
-#ifdef ZMQ_RCVHWM
-  {"RCVHWM", NULL, ZMQ_RCVHWM, CONST_NUMBER},
+#ifdef ZMQ_DONTWAIT
+  {"DONTWAIT", NULL, ZMQ_DONTWAIT, CONST_NUMBER},
 #endif
 #ifdef ZMQ_RECOVERY_IVL
   {"RECOVERY_IVL", NULL, ZMQ_RECOVERY_IVL, CONST_NUMBER},
