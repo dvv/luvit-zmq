@@ -13,7 +13,7 @@ local count = 0
 local poller = ZMQ.Poller:new(2)
 poller:add(r, ZMQ.POLLIN, function(sock, revents)
   --p('R')
-  while r:recv(1) == 'hello' do
+  while r:recv(ZMQ.NOBLOCK) == 'hello' do
     count = count + 1
     if count == 100000 then
       p('100000 messages passed')
