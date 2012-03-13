@@ -351,6 +351,7 @@ static const char *nobj_lua_Reader(lua_State *L, void *data, size_t *size) {
 	nobj_reader_state *state = (nobj_reader_state *)data;
 	const char *ptr;
 
+	(void)L;
 	ptr = state->ffi_init_code[state->offset];
 	if(ptr != NULL) {
 		*size = strlen(ptr);
@@ -523,7 +524,7 @@ static FUNC_UNUSED void *obj_udata_luacheck(lua_State *L, int _index, obj_type *
 
 static FUNC_UNUSED void *obj_udata_luaoptional(lua_State *L, int _index, obj_type *type) {
 	void *obj = NULL;
-	if(lua_isnil(L, _index)) {
+	if(lua_gettop(L) < _index) {
 		return obj;
 	}
 	obj_udata_luacheck_internal(L, _index, &(obj), type, 1);
@@ -731,7 +732,7 @@ static FUNC_UNUSED void * obj_simple_udata_luacheck(lua_State *L, int _index, ob
 }
 
 static FUNC_UNUSED void * obj_simple_udata_luaoptional(lua_State *L, int _index, obj_type *type) {
-	if(lua_isnil(L, _index)) {
+	if(lua_gettop(L) < _index) {
 		return NULL;
 	}
 	return obj_simple_udata_luacheck(L, _index, type);
@@ -1398,6 +1399,8 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "\n"
 "void poller_cleanup(ZMQ_Poller *);\n"
 "\n"
+"ZMQ_Error poller_poll(ZMQ_Poller *, long);\n"
+"\n"
 "int poller_next_revents(ZMQ_Poller *, int*);\n"
 "\n"
 "ZMQ_Error zmq_term(ZMQ_Ctx *);\n"
@@ -1612,8 +1615,8 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "\n"
 "	function obj_type_ZMQ_Ctx_check(ptr)\n"
 "		-- if ptr is nil or is the correct type, then just return it.\n"
-"		if not ptr or ffi.istype(obj_ctype, ptr) then return ptr end\n"
-"		-- check if it is a compatible type.\n", /* ----- CUT ----- */
+"		if not ptr or ffi.istype(obj_ctype, ptr) then return ptr end\n", /* ----- CUT ----- */
+"		-- check if it is a compatible type.\n"
 "		local ctype = tostring(ffi.typeof(ptr))\n"
 "		local bcaster = _obj_subs.ZMQ_Ctx[ctype]\n"
 "		if bcaster then\n"
@@ -2206,8 +2209,8 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "end\n"
 "end\n"
 "end\n"
-"\n"
-"-- method: set_affinity\n", /* ----- CUT ----- */
+"\n", /* ----- CUT ----- */
+"-- method: set_affinity\n"
 "if (_M.VERSION_2_0 or _M.VERSION_3_0) then\n"
 "function _meth.ZMQ_Socket.set_affinity(self, value2)\n"
 "  \n"
@@ -2904,7 +2907,7 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "function _pub.ZMQ_Poller.new(length1)\n"
 "    length1 = length1 or 10\n"
 "  local self = ffi.new(\"ZMQ_Poller\")\n"
-"  C.poller_init(self, length1)\n"
+"  Cmod.poller_init(self, length1)\n"
 "  return obj_type_ZMQ_Poller_push(self)\n"
 "end\n"
 "register_default_constructor(_pub,\"ZMQ_Poller\",_pub.ZMQ_Poller.new)\n"
@@ -2913,7 +2916,7 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "function _meth.ZMQ_Poller.close(self)\n"
 "  local self = obj_type_ZMQ_Poller_delete(self)\n"
 "  if not self then return end\n"
-"  C.poller_cleanup(self)\n"
+"  Cmod.poller_cleanup(self)\n"
 "  return \n"
 "end\n"
 "_priv.ZMQ_Poller.__gc = _meth.ZMQ_Poller.close\n"
@@ -2932,7 +2935,7 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "	else\n"
 "		error(\"expected number or ZMQ_Socket\")\n"
 "	end\n"
-"	idx1 = C.poller_get_free_item(self)\n"
+"	idx1 = Cmod.poller_get_free_item(self)\n"
 "	local item = self.items[idx1]\n"
 "	item.socket = sock\n"
 "	item.fd = fd\n"
@@ -2951,11 +2954,11 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "	if sock_type == 'cdata' then\n"
 "		sock = obj_type_ZMQ_Socket_check(sock2)\n"
 "		-- find sock in items list.\n"
-"		idx1 = C.poller_find_sock_item(self, sock)\n"
+"		idx1 = Cmod.poller_find_sock_item(self, sock)\n"
 "	elseif sock_type == 'number' then\n"
 "		fd = sock2\n"
 "		-- find fd in items list.\n"
-"		idx1 = C.poller_find_fd_item(self, fd);\n"
+"		idx1 = Cmod.poller_find_fd_item(self, fd);\n"
 "	else\n"
 "		error(\"expected number or ZMQ_Socket\")\n"
 "	end\n"
@@ -2965,7 +2968,7 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "		item.fd = fd\n"
 "		item.events = events3\n"
 "	else\n"
-"		C.poller_remove_item(self, idx1)\n"
+"		Cmod.poller_remove_item(self, idx1)\n"
 "	end\n"
 "\n"
 "  return idx1\n"
@@ -2980,16 +2983,16 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "	if sock_type == 'cdata' then\n"
 "		sock = obj_type_ZMQ_Socket_check(sock2)\n"
 "		-- find sock in items list.\n"
-"		idx1 = C.poller_find_sock_item(self, sock)\n"
+"		idx1 = Cmod.poller_find_sock_item(self, sock)\n"
 "	elseif sock_type == 'number' then\n"
 "		fd = sock2\n"
 "		-- find fd in items list.\n"
-"		idx1 = C.poller_find_fd_item(self, fd);\n"
+"		idx1 = Cmod.poller_find_fd_item(self, fd);\n"
 "	else\n"
 "		error(\"expected number or ZMQ_Socket\")\n"
 "	end\n"
 "	if idx1 >= 0 then\n"
-"		C.poller_remove_item(self, idx1)\n"
+"		Cmod.poller_remove_item(self, idx1)\n"
 "	end\n"
 "\n"
 "  return idx1\n"
@@ -3001,8 +3004,7 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "  \n"
 "  local count1 = 0\n"
 "  local err2 = 0\n"
-"	-- poll for events\n"
-"	err2 = C.poller_poll(self, timeout2)\n"
+"  err2 = Cmod.poller_poll(self, timeout2)\n"
 "	if(err2 > 0) then\n"
 "		self.next = 0\n"
 "		count1 = err2\n"
@@ -3024,7 +3026,7 @@ static const char *zmq_ffi_lua_code[] = { "local ffi=require\"ffi\"\n"
 "  \n"
 "  local idx1 = 0\n"
 "  local revents2 = next_revents_idx_revents_tmp\n"
-"  idx1 = C.poller_next_revents(self, revents2)\n"
+"  idx1 = Cmod.poller_next_revents(self, revents2)\n"
 "  return idx1, revents2[0]\n"
 "end\n"
 "end\n"
@@ -5508,8 +5510,7 @@ static int ZMQ_Poller__poll__meth(lua_State *L) {
   long timeout2 = luaL_checkinteger(L,2);
   int count1 = 0;
   ZMQ_Error err2 = 0;
-	/* poll for events */
-	err2 = poller_poll(this1, timeout2);
+  err2 = poller_poll(this1, timeout2);
 	if(err2 > 0) {
 		this1->next = 0;
 		count1 = err2;
