@@ -4,7 +4,6 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-#include <lualib.h>
 
 static int lzmq_init(lua_State *L) {
 
@@ -29,7 +28,9 @@ static const luaL_reg exports[] = {
   {"recv", lzmq_recv},
   {"msg_init", lzmq_msg_init},
   {"msg_close", lzmq_msg_close},
-  {"setsockopt", lzmq_setsockopt},*/
+  {"poll", lzmq_poll},
+  {"setopt", lzmq_setsockopt},
+  {"getopt", lzmq_getsockopt},*/
   {NULL, NULL}
 };
 
@@ -38,6 +39,5 @@ LUALIB_API int luaopen_zmq(lua_State *L) {
   lua_newtable(L);
   luaL_register(L, NULL, exports);
 
-  // return the new module
   return 1;
 }

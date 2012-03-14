@@ -1,5 +1,7 @@
 #!/usr/bin/env luvit
 
+local Worker = require('worker').Worker
+
 local ZMQ = require('../')
 
 -- context
@@ -31,4 +33,11 @@ end)
 assert(r:bind('inproc://test'))
 assert(s:connect('inproc://test'))
 
-poller:start()
+p(type(poller.poller.poll))
+--poller:start()
+--Worker:new(poller.start, poller)
+Worker:new():on('end', function (...)
+  p('END', ...)
+end):on('error', function (err)
+  p('ERROR', err)
+end):run(poller.poller.poll, poller.poller, -1)
